@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zerion Labs · Prueba Web Share API</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172036;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;padding:25px 14px}.wrap{max-width:760px;margin:auto}.card{background:white;border:1px solid #e2e8f0;border-radius:18px;padding:22px;box-shadow:0 4px 26px #14213d09}h1{font-size:27px;margin:8px 0}p{line-height:1.5;color:#526078}.sub{color:#64748b;font-size:13px}.eyebrow{font-size:12px;letter-spacing:.1em;font-weight:800;color:#4359b2}label{display:block;font-weight:650;margin:18px 0 8px}input[type=file],textarea{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;font:inherit}textarea{min-height:115px;resize:vertical}button{font:inherit;border:0;border-radius:11px;padding:12px 16px;cursor:pointer;font-weight:680}button.primary{background:#253bc0;color:#fff}button.secondary{border:1px solid #cbd5e1;background:white;color:#172036}button:disabled{opacity:.55;cursor:not-allowed}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}.images{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:10px;margin-top:12px}.thumb{border:1px solid #e2e8f0;border-radius:11px;overflow:hidden}.thumb img{width:100%;height:112px;object-fit:cover;display:block}.thumb span{font-size:11px;display:block;padding:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{padding:13px;background:#eff6ff;border-radius:10px;margin-top:18px;color:#1e3a8a;font-size:14px;white-space:pre-wrap}.hint{font-size:13px;color:#64748b;margin-top:10px}small{color:#64748b}.checks{display:flex;flex-direction:column;gap:6px;margin-top:12px}.checks label{margin:0;font-weight:450}
+</style>
+</head>
+<body><main class="wrap"><div class="card">
+<div class="eyebrow">ZERION LABS · EXPERIMENTO TÉCNICO</div><h1>Probemos compartir imágenes</h1><p>Selecciona de 1 a varias fotos, escribe una descripción y prueba cómo las recibe WhatsApp. Esta página <strong>no sube ni almacena tus archivos</strong>.</p>
+<label for="files">1. Elige fotografías (JPG, PNG o WebP)</label>
+<input id="files" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+<div id="preview" class="images"></div>
+<label for="message">2. Mensaje de prueba</label><textarea id="message">👗 Vestido Hilary\n💰 $230 MXN\n📏 Tallas: CH, M, G\n🎨 Colores: rosa, negro y verde\n📲 Consulta disponibilidad.</textarea>
+<div class="checks"><label><input id="withText" type="checkbox" checked> Intentar enviar mensaje junto con imágenes</label></div>
+<div class="actions"><button id="share" class="primary">↗ Compartir imágenes</button><button id="copy" class="secondary">Copiar descripción</button><button id="download" class="secondary">Descargar imágenes</button></div>
+<div id="status" role="status" aria-live="polite" class="status">Selecciona tus fotos para comenzar.</div>
+<p class="hint"><strong>Importante:</strong> La API abre el menú del sistema y no garantiza que WhatsApp conserve el texto como pie de foto ni que admita un lote. Esta prueba no realiza envíos automáticos.</p>
+<p class="hint">Para el ensayo real, abre la página desde un sitio HTTPS (o localhost). Si tu navegador no admite archivos por Web Share API, descarga las fotos y adjúntalas manualmente.</p>
+</div></main>
+<script>
+const inp=document.getElementById('files'),preview=document.getElementById('preview'),status=document.getElementById('status'),message=document.getElementById('message');let urls=[];
+function say(msg){status.textContent=msg}
+function files(){return [...inp.files]}
+function supported(fs){return typeof navigator.share==='function' && typeof navigator.canShare==='function' && navigator.canShare({files:fs})}
+inp.addEventListener('change',()=>{urls.forEach(u=>URL.revokeObjectURL(u));urls=[];preview.replaceChildren();const fs=files();fs.forEach(f=>{const url=URL.createObjectURL(f);urls.push(url);const div=document.createElement('div');div.className='thumb';const img=document.createElement('img');img.src=url;img.alt=f.name;const sp=document.createElement('span');sp.textContent=f.name;div.append(img,sp);preview.append(div)});say(fs.length?`${fs.length} imagen(es) seleccionada(s).\nSoporte para compartir archivos: ${supported(fs)?'Sí (preliminar; depende también de la aplicación receptora)':'No disponible para este lote/navegador'}.`:'Selecciona tus fotos para comenzar.')});
+document.getElementById('share').addEventListener('click',async()=>{const fs=files();if(!fs.length){say('Primero selecciona al menos una fotografía.');return}if(!supported(fs)){say('Tu navegador no admite compartir este lote de archivos. Usa Descargar imágenes o prueba desde un navegador móvil con HTTPS.');return}const data={files:fs,title:'Zerion Catalog — Prueba'};if(document.getElementById('withText').checked && message.value.trim())data.text=message.value;try{await navigator.share(data);say('El sistema terminó la operación de compartir. Esto NO confirma que WhatsApp enviara el mensaje o conservara su texto. Revísalo en la conversación.')}catch(e){say(e.name==='AbortError'?'Compartir cancelado.':`No se pudo compartir: ${e.name}: ${e.message}`)}});
+document.getElementById('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(message.value);say('Descripción copiada. Ahora puedes pegarla manualmente en WhatsApp.')}catch(e){message.focus();message.select();say('No se pudo copiar automáticamente. Seleccioné el texto para que puedas copiarlo manualmente.')}});
+document.getElementById('download').addEventListener('click',()=>{const fs=files();if(!fs.length){say('Selecciona fotos antes de descargarlas.');return}fs.forEach((f,i)=>{const a=document.createElement('a');a.href=urls[i];a.download=f.name||`ficha-${i+1}.jpg`;document.body.append(a);a.click();a.remove()});say('Se solicitó la descarga de cada imagen. El navegador puede pedir permiso para descargas múltiples.')});
+</script></body></html>
