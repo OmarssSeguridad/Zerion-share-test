@@ -1,31 +1,185 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zerion Labs · Prueba Web Share API</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zerion Labs · Web Share por foto</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172036;background:#f5f7fb}*{box-sizing:border-box}body{margin:0;padding:25px 14px}.wrap{max-width:760px;margin:auto}.card{background:white;border:1px solid #e2e8f0;border-radius:18px;padding:22px;box-shadow:0 4px 26px #14213d09}h1{font-size:27px;margin:8px 0}p{line-height:1.5;color:#526078}.sub{color:#64748b;font-size:13px}.eyebrow{font-size:12px;letter-spacing:.1em;font-weight:800;color:#4359b2}label{display:block;font-weight:650;margin:18px 0 8px}input[type=file],textarea{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;font:inherit}textarea{min-height:115px;resize:vertical}button{font:inherit;border:0;border-radius:11px;padding:12px 16px;cursor:pointer;font-weight:680}button.primary{background:#253bc0;color:#fff}button.secondary{border:1px solid #cbd5e1;background:white;color:#172036}button:disabled{opacity:.55;cursor:not-allowed}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}.images{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:10px;margin-top:12px}.thumb{border:1px solid #e2e8f0;border-radius:11px;overflow:hidden}.thumb img{width:100%;height:112px;object-fit:cover;display:block}.thumb span{font-size:11px;display:block;padding:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{padding:13px;background:#eff6ff;border-radius:10px;margin-top:18px;color:#1e3a8a;font-size:14px;white-space:pre-wrap}.hint{font-size:13px;color:#64748b;margin-top:10px}small{color:#64748b}.checks{display:flex;flex-direction:column;gap:6px;margin-top:12px}.checks label{margin:0;font-weight:450}
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172036;background:#f5f7fb}
+*{box-sizing:border-box} body{margin:0;padding:24px 14px}.wrap{max-width:780px;margin:auto}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:20px;box-shadow:0 4px 26px #14213d09}
+h1{font-size:26px;margin:8px 0}p{line-height:1.45;color:#526078}.eyebrow{font-size:12px;letter-spacing:.1em;font-weight:800;color:#4359b2}
+label{display:block;font-weight:650;margin:18px 0 8px}input[type=file],textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;font:inherit}
+textarea{min-height:105px;resize:vertical}
+.products{display:grid;gap:14px;margin-top:16px}.product{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fbfcff}
+.product-top{display:flex;gap:12px;align-items:flex-start}.product img{width:105px;height:105px;object-fit:cover;border-radius:10px}
+.product-info{flex:1;min-width:0}.filename{font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:7px}
+.product textarea{min-height:120px}
+button{font:inherit;border:0;border-radius:11px;padding:12px 15px;cursor:pointer;font-weight:680}
+.primary{background:#253bc0;color:#fff}.secondary{border:1px solid #cbd5e1;background:#fff;color:#172036}
+.small{padding:9px 12px;font-size:14px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.status{padding:13px;background:#eff6ff;border-radius:10px;margin-top:18px;color:#1e3a8a;font-size:14px;white-space:pre-wrap}
+.hint{font-size:13px;color:#64748b;margin-top:10px}.section{margin-top:22px;padding-top:18px;border-top:1px solid #e2e8f0}
+@media(max-width:520px){.product-top{display:block}.product img{width:100%;height:210px;margin-bottom:10px}}
 </style>
 </head>
-<body><main class="wrap"><div class="card">
-<div class="eyebrow">ZERION LABS · EXPERIMENTO TÉCNICO</div><h1>Probemos compartir imágenes</h1><p>Selecciona de 1 a varias fotos, escribe una descripción y prueba cómo las recibe WhatsApp. Esta página <strong>no sube ni almacena tus archivos</strong>.</p>
-<label for="files">1. Elige fotografías (JPG, PNG o WebP)</label>
+<body>
+<main class="wrap"><div class="card">
+<div class="eyebrow">ZERION LABS · EXPERIMENTO TÉCNICO V2</div>
+<h1>Una descripción por cada foto</h1>
+<p>Selecciona varias imágenes. Cada una tendrá su propia descripción y podrás probar compartirla individualmente con WhatsApp.</p>
+
+<label for="files">1. Elige fotografías</label>
 <input id="files" type="file" accept="image/jpeg,image/png,image/webp" multiple>
-<div id="preview" class="images"></div>
-<label for="message">2. Mensaje de prueba</label><textarea id="message">👗 Vestido Hilary\n💰 $230 MXN\n📏 Tallas: CH, M, G\n🎨 Colores: rosa, negro y verde\n📲 Consulta disponibilidad.</textarea>
-<div class="checks"><label><input id="withText" type="checkbox" checked> Intentar enviar mensaje junto con imágenes</label></div>
-<div class="actions"><button id="share" class="primary">↗ Compartir imágenes</button><button id="copy" class="secondary">Copiar descripción</button><button id="download" class="secondary">Descargar imágenes</button></div>
+
+<div id="products" class="products"></div>
+
+<div class="section">
+<strong>Prueba en lote</strong>
+<p class="hint">Al compartir varias imágenes juntas, Web Share API solo nos deja enviar un texto general. No puede asignar de forma estándar un pie de foto diferente a cada archivo.</p>
+<div class="actions">
+<button id="shareAll" class="primary">↗ Compartir todas</button>
+<button id="copyAll" class="secondary">Copiar todas las descripciones</button>
+</div>
+</div>
+
 <div id="status" role="status" aria-live="polite" class="status">Selecciona tus fotos para comenzar.</div>
-<p class="hint"><strong>Importante:</strong> La API abre el menú del sistema y no garantiza que WhatsApp conserve el texto como pie de foto ni que admita un lote. Esta prueba no realiza envíos automáticos.</p>
-<p class="hint">Para el ensayo real, abre la página desde un sitio HTTPS (o localhost). Si tu navegador no admite archivos por Web Share API, descarga las fotos y adjúntalas manualmente.</p>
+<p class="hint"><strong>La prueba clave:</strong> usa “Compartir esta foto” y revisa si WhatsApp conserva el texto junto a esa imagen. Luego prueba “Compartir todas” para comparar.</p>
 </div></main>
+
 <script>
-const inp=document.getElementById('files'),preview=document.getElementById('preview'),status=document.getElementById('status'),message=document.getElementById('message');let urls=[];
-function say(msg){status.textContent=msg}
-function files(){return [...inp.files]}
-function supported(fs){return typeof navigator.share==='function' && typeof navigator.canShare==='function' && navigator.canShare({files:fs})}
-inp.addEventListener('change',()=>{urls.forEach(u=>URL.revokeObjectURL(u));urls=[];preview.replaceChildren();const fs=files();fs.forEach(f=>{const url=URL.createObjectURL(f);urls.push(url);const div=document.createElement('div');div.className='thumb';const img=document.createElement('img');img.src=url;img.alt=f.name;const sp=document.createElement('span');sp.textContent=f.name;div.append(img,sp);preview.append(div)});say(fs.length?`${fs.length} imagen(es) seleccionada(s).\nSoporte para compartir archivos: ${supported(fs)?'Sí (preliminar; depende también de la aplicación receptora)':'No disponible para este lote/navegador'}.`:'Selecciona tus fotos para comenzar.')});
-document.getElementById('share').addEventListener('click',async()=>{const fs=files();if(!fs.length){say('Primero selecciona al menos una fotografía.');return}if(!supported(fs)){say('Tu navegador no admite compartir este lote de archivos. Usa Descargar imágenes o prueba desde un navegador móvil con HTTPS.');return}const data={files:fs,title:'Zerion Catalog — Prueba'};if(document.getElementById('withText').checked && message.value.trim())data.text=message.value;try{await navigator.share(data);say('El sistema terminó la operación de compartir. Esto NO confirma que WhatsApp enviara el mensaje o conservara su texto. Revísalo en la conversación.')}catch(e){say(e.name==='AbortError'?'Compartir cancelado.':`No se pudo compartir: ${e.name}: ${e.message}`)}});
-document.getElementById('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(message.value);say('Descripción copiada. Ahora puedes pegarla manualmente en WhatsApp.')}catch(e){message.focus();message.select();say('No se pudo copiar automáticamente. Seleccioné el texto para que puedas copiarlo manualmente.')}});
-document.getElementById('download').addEventListener('click',()=>{const fs=files();if(!fs.length){say('Selecciona fotos antes de descargarlas.');return}fs.forEach((f,i)=>{const a=document.createElement('a');a.href=urls[i];a.download=f.name||`ficha-${i+1}.jpg`;document.body.append(a);a.click();a.remove()});say('Se solicitó la descarga de cada imagen. El navegador puede pedir permiso para descargas múltiples.')});
-</script></body></html>
+const input = document.getElementById('files');
+const products = document.getElementById('products');
+const status = document.getElementById('status');
+let items = [];
+
+function say(t){ status.textContent=t; }
+
+function defaultDescription(i){
+  return `👗 Producto ${i+1}
+💰 Precio: $230 MXN
+📏 Tallas: CH, M, G
+🎨 Colores: rosa, negro y verde
+📲 Consulta disponibilidad.`;
+}
+
+function canShare(files){
+  return typeof navigator.share === 'function' &&
+         typeof navigator.canShare === 'function' &&
+         navigator.canShare({files});
+}
+
+async function shareOne(item, index){
+  const data = {
+    files:[item.file],
+    title:`Zerion Catalog — Producto ${index+1}`,
+    text:item.textarea.value.trim()
+  };
+  if(!canShare(data.files)){
+    say(`Este navegador no puede compartir la foto ${index+1} como archivo.`);
+    return;
+  }
+  try{
+    await navigator.share(data);
+    say(`Foto ${index+1}: operación de compartir terminada. Revisa en WhatsApp si la descripción quedó junto a la imagen.`);
+  }catch(e){
+    say(e.name === 'AbortError' ? 'Compartir cancelado.' : `Error: ${e.name}: ${e.message}`);
+  }
+}
+
+input.addEventListener('change', ()=>{
+  items.forEach(x=>URL.revokeObjectURL(x.url));
+  items=[];
+  products.replaceChildren();
+
+  [...input.files].forEach((file,i)=>{
+    const url=URL.createObjectURL(file);
+    const box=document.createElement('div');
+    box.className='product';
+
+    const top=document.createElement('div');
+    top.className='product-top';
+
+    const img=document.createElement('img');
+    img.src=url;
+    img.alt=file.name;
+
+    const info=document.createElement('div');
+    info.className='product-info';
+
+    const name=document.createElement('div');
+    name.className='filename';
+    name.textContent=file.name;
+
+    const textarea=document.createElement('textarea');
+    textarea.value=defaultDescription(i);
+    textarea.setAttribute('aria-label',`Descripción de ${file.name}`);
+
+    const actions=document.createElement('div');
+    actions.className='actions';
+
+    const share=document.createElement('button');
+    share.className='primary small';
+    share.textContent='↗ Compartir esta foto';
+
+    const copy=document.createElement('button');
+    copy.className='secondary small';
+    copy.textContent='Copiar descripción';
+
+    const item={file,url,textarea};
+    items.push(item);
+
+    share.addEventListener('click',()=>shareOne(item,i));
+    copy.addEventListener('click',async()=>{
+      try{
+        await navigator.clipboard.writeText(textarea.value);
+        say(`Descripción de la foto ${i+1} copiada.`);
+      }catch(e){
+        textarea.focus(); textarea.select();
+        say('No se pudo copiar automáticamente; seleccioné el texto.');
+      }
+    });
+
+    actions.append(share,copy);
+    info.append(name,textarea,actions);
+    top.append(img,info);
+    box.append(top);
+    products.append(box);
+  });
+
+  say(items.length
+    ? `${items.length} foto(s) cargada(s). Edita una descripción distinta para cada una y prueba compartirlas individualmente.`
+    : 'Selecciona tus fotos para comenzar.');
+});
+
+document.getElementById('shareAll').addEventListener('click', async()=>{
+  if(!items.length){ say('Primero selecciona fotografías.'); return; }
+  const files=items.map(x=>x.file);
+  if(!canShare(files)){ say('Este navegador no admite compartir este lote de archivos.'); return; }
+
+  const combined=items.map((x,i)=>`FOTO ${i+1}\n${x.textarea.value.trim()}`).join('\n\n──────────\n\n');
+  try{
+    await navigator.share({
+      files,
+      title:'Zerion Catalog — Fichas',
+      text:combined
+    });
+    say('Lote compartido. Revisa cómo WhatsApp manejó el texto: será un mensaje general, no un pie independiente garantizado por foto.');
+  }catch(e){
+    say(e.name === 'AbortError' ? 'Compartir cancelado.' : `Error: ${e.name}: ${e.message}`);
+  }
+});
+
+document.getElementById('copyAll').addEventListener('click',async()=>{
+  if(!items.length){ say('Primero selecciona fotografías.'); return; }
+  const combined=items.map((x,i)=>`FOTO ${i+1}\n${x.textarea.value.trim()}`).join('\n\n');
+  try{
+    await navigator.clipboard.writeText(combined);
+    say('Todas las descripciones fueron copiadas.');
+  }catch(e){
+    say('No se pudieron copiar automáticamente.');
+  }
+});
+</script>
+</body>
+</html>
